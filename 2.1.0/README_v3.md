@@ -1,4 +1,4 @@
-# TileJSON 2.1.0
+# USACE MetaJSON 1.0.0
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
 "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in
@@ -12,7 +12,7 @@ in configuration and browsing.
 
 ## 2. File format
 
-TileJSON manifest files use the JSON format as described in RFC 4627.
+MetaJSON manifest files use the JSON format as described in RFC 4627.
 
 Implementations MUST treat unknown keys as if they weren't present.
 However, implementations MUST expose unknown key/values in their API
@@ -21,11 +21,27 @@ treat invalid values for keys as if they weren't present. If the key is
 required, implementations MUST treat the entire TileJSON manifest file
 as invalid and refuse operation.
 
+###//Notes
+Need to take a look at all of the formats we want to support:
+
+* WMS
+* TMS
+* ArcGIS Server
+* Vector Tile (protobuf or geoJSON)
+* Basic Vector data, geoJSON or other vector? (KML, GPX, etc...)
+
+Each format requires it's own set of attributes that we need to track
+in order to add it to the map.
 
 ```javascript
 {
+    // Information about the layer
+    //
+    // REQUIRED
     "tilejson": "2.1.0",
+    // REQUIRED
     "name": "compositing",
+    // REQUIRED
     "description": "A simple, light grey world.",
     // OPTIONAL
     // internal dataset version
@@ -33,7 +49,6 @@ as invalid and refuse operation.
     // OPTIONAL
     // do not interpret as html
     "attribution": "<a href='http://openstreetmap.org'>OSM contributors</a>",
-    "template": "{{#__teaser__}}{{NAME}}{{/__teaser__}}",
     // OPTIONAL
     // legend object that tells us how to draw the legend
     // may point to the legend end-point of a service as well
@@ -41,69 +56,46 @@ as invalid and refuse operation.
       // REQUIRED
       // see /legend.md for legend types
     },
-
-///////// Editing starting here
-
-
-    // OPTIONAL. Default: "xyz". Either "xyz" or "tms". Influences the y
-    // direction of the tile coordinates.
-    // The global-mercator (aka Spherical Mercator) profile is assumed.
+    // OPTIONAL
+    // array of field names, descriptions and types for the source data
+    "fields":[
+      // For each attribute, you should include a field record like below:
+      {
+        "name":"id",
+        "type":"integer"
+        "description":"Unique ID for each record"
+      }
+    ]
+    //
+    // How do you connect to the layer
+    //
+    // OPTIONAL. Default: "xyz". Either "xyz" or "tms".
     "scheme": "xyz",
-
     // REQUIRED. An array of tile endpoints. {z}, {x} and {y}, if present,
-    // are replaced with the corresponding integers. If multiple endpoints are specified, clients
-    // may use any combination of endpoints. All endpoints MUST return the same
-    // content for the same URL. The array MUST contain at least one endpoint.
     "tiles": [
         "http://localhost:8888/admin/1.0.0/world-light,broadband/{z}/{x}/{y}.png"
     ],
-
-    // OPTIONAL. Default: []. An array of interactivity endpoints. {z}, {x}
-    // and {y}, if present, are replaced with the corresponding integers. If multiple
-    // endpoints are specified, clients may use any combination of endpoints.
-    // All endpoints MUST return the same content for the same URL.
-    // If the array doesn't contain any entries, interactivity is not supported
-    // for this tileset.
-    // See https://github.com/mapbox/utfgrid-spec/tree/master/1.2
-    // for the interactivity specification.
+    // OPTIONAL. Default: [].
     "grids": [
         "http://localhost:8888/admin/1.0.0/broadband/{z}/{x}/{y}.grid.json"
     ],
-
-    // OPTIONAL. Default: []. An array of data files in GeoJSON format.
-    // {z}, {x} and {y}, if present,
-    // are replaced with the corresponding integers. If multiple
-    // endpoints are specified, clients may use any combination of endpoints.
-    // All endpoints MUST return the same content for the same URL.
-    // If the array doesn't contain any entries, then no data is present in
-    // the map.
+    // OPTIONAL. Default: null. Contains a mustache template to be used to
+    // format data from grids for interaction.
+    "template": "{{#__teaser__}}{{NAME}}{{/__teaser__}}",
+    // OPTIONAL. Default: [].  URL(s) for downloading the source data, separate by file type
     "data": [
         "http://localhost:8888/admin/data.geojson"
     ],
-
+    //
+    // Standard viewport settings for the layer
+    //
     // OPTIONAL. Default: 0. >= 0, <= 22.
-    // An integer specifying the minimum zoom level.
     "minzoom": 0,
-
     // OPTIONAL. Default: 22. >= 0, <= 22.
-    // An integer specifying the maximum zoom level. MUST be >= minzoom.
     "maxzoom": 11,
-
     // OPTIONAL. Default: [-180, -90, 180, 90].
-    // The maximum extent of available map tiles. Bounds MUST define an area
-    // covered by all zoom levels. The bounds are represented in WGS:84
-    // latitude and longitude values, in the order left, bottom, right, top.
-    // Values may be integers or floating point numbers.
     "bounds": [ -180, -85.05112877980659, 180, 85.0511287798066 ],
-
     // OPTIONAL. Default: null.
-    // The first value is the longitude, the second is latitude (both in
-    // WGS:84 values), the third value is the zoom level as an integer.
-    // Longitude and latitude MUST be within the specified bounds.
-    // The zoom level MUST be between minzoom and maxzoom.
-    // Implementations can use this value to set the default location. If the
-    // value is null, implementations may use their own algorithm for
-    // determining a default location.
     "center": [ -76.275329586789, 39.153492567373, 8 ]
 }
 ```

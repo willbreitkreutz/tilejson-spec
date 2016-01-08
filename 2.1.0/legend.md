@@ -17,7 +17,6 @@ Static legends are served by the source server and only need to reference the le
   // REQUIRED STRING
   // URL to the legend graphic, can be static or dynamically generated on the server
   "src":"/mapserv/legend.png"
-
 }
 ```
 
